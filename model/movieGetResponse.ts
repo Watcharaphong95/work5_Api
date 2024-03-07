@@ -1,10 +1,12 @@
+export interface AllMovieGetResponse {
+    data: MixMovieGetResponse[];
+}
+
 export interface MixMovieGetResponse {
     movie: MovieGetResponse[];
     creator: PersonGetResponse[];
     star: PersonGetResponse[];
 }
-
-
 
 export interface MovieGetResponse {
     mid:    number;

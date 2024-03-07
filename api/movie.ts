@@ -6,6 +6,22 @@ import { MixMovieGetResponse, MovieGetResponse, PersonGetResponse } from "../mod
 
 export const router = express.Router();
 
+router.get("/", async (req, res) => {
+
+  // let resultGetMovie: MixMovieGetResponse = {
+  //   movie: [],
+  //   creator: [],
+  //   star: []
+  // }
+
+  let sql = 'select * from movie';
+  let movieResult = await queryAsync(sql);
+  let rawMovieResult = JSON.parse(JSON.stringify(movieResult));
+  let movieData = rawMovieResult as MovieGetResponse[];
+
+  res.json({movieData});
+});
+
 router.get("/:name", async (req, res) => {
   let name = req.params.name;
   let resultGetMovie: MixMovieGetResponse = {

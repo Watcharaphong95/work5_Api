@@ -32,9 +32,9 @@ router.get("/:name", async (req, res) => {
     data: [],
   };
 
-  let sql = "SELECT * FROM movie WHERE name like ?";
-  sql = mysql.format(sql, ["%" + name + "%"]);
+  let sql = "select * from movie where name like ?";
 
+  sql = mysql.format(sql, ["%" + name + "%"]);
   let movieResult = await queryAsync(sql);
   let rawMovieResult = JSON.parse(JSON.stringify(movieResult));
 
@@ -44,30 +44,26 @@ router.get("/:name", async (req, res) => {
       creator: [],
       star: [],
     };
-
-    let sql = "SELECT * FROM movie WHERE name like ?";
-    sql = mysql.format(sql, ["%" + rawMv.name + "%"]);
-
-    let movieResult = await queryAsync(sql);
-    let rawMovieResult = JSON.parse(JSON.stringify(movieResult));
-    resultGetMovie.movie = rawMovieResult as MovieGetResponse[];
+    resultGetMovie.movie = rawMv as MovieGetResponse[];
 
     sql =
-      "select * from person where pid in (select c_pid from creator where c_mid = ?)";
-    sql = mysql.format(sql, [rawMv.mid]);
+      "SELECT person.*, creator.c_pid AS creator_pid, star.s_pid AS star_pid " +
+      "FROM person " +
+      "LEFT JOIN creator ON person.pid = creator.c_pid " +
+      "LEFT JOIN star ON person.pid = star.s_pid " +
+      "WHERE creator.c_mid = ? OR star.s_mid = ?";
+    sql = mysql.format(sql, [rawMv.mid, rawMv.mid]);
 
-    let creatorResult = await queryAsync(sql);
-    let rawCreatorResult = JSON.parse(JSON.stringify(creatorResult));
-    resultGetMovie.creator = rawCreatorResult as PersonGetResponse[];
+    let combineResult = await queryAsync(sql);
+    let rawCombineResult = JSON.parse(JSON.stringify(combineResult));
 
-    sql =
-      "select * from person where pid in (select s_pid from star where s_mid = ?)";
-    sql = mysql.format(sql, [rawMv.mid]);
-
-    let starResult = await queryAsync(sql);
-    let rawStarResult = JSON.parse(JSON.stringify(starResult));
-    resultGetMovie.star = rawStarResult as PersonGetResponse[];
-
+    for (const row of rawCombineResult) {
+      if(row.creator_pid){
+        resultGetMovie.creator.push(row);
+      }else if (row.star_pid){
+        resultGetMovie.star.push(row);
+      }
+    }
     getAllMovie.data.push(resultGetMovie);
   }
 
